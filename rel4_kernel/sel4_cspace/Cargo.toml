@@ -1,0 +1,29 @@
+[package]
+name = "sel4_cspace"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+log = "0.4"
+spin = { version = "0.9", features = ["use_ticket_mutex"] }
+sel4_common = { path = "../sel4_common" }
+rel4-utils = { workspace = true }
+vstd = { git = "https://github.com/verus-lang/verus.git", default-features = false, features = ["alloc"] }
+
+[target.'cfg(target_arch = "riscv64")'.dependencies]
+riscv = { git = "https://github.com/rcore-os/riscv", features = ["inline-asm"] }
+
+[features]
+kernel_mcs = []
+enable_smc = []
+hypervisor = []
+verus = []
+verify = ["verus"]
+
+[package.metadata.verus]
+path = "src/lib.rs"
+verify = true
+
+[package.metadata.rel4.verification]
+package = "sel4_cspace"
+features = []

@@ -1,0 +1,92 @@
+#[cfg(target_arch = "aarch64")]
+use sel4_common::{
+    sel4_config::{ID_AA64PFR0_EL1_ASIMD, ID_AA64PFR0_EL1_FP},
+    utils::ptr_to_usize_add,
+};
+#[cfg(target_arch = "aarch64")]
+use sel4_vspace::{dsb, isb};
+
+#[cfg(target_arch = "riscv64")]
+#[inline]
+pub fn clear_memory(ptr: *mut u8, bits: usize) {
+    unsafe {
+        core::slice::from_raw_parts_mut(ptr, bit!(bits)).fill(0);
+    }
+}
+
+// /* Cleaning memory before user-level access */
+// static inline void clearMemory(word_t *ptr, word_t bits)
+// {
+//     memzero(ptr, (1ul << (bits)));
+//     cleanCacheRange_RAM((word_t)ptr, (word_t)ptr + (1ul << (bits)) - 1,
+//                         addrFromPPtr(ptr));
+// }
+
+#[cfg(target_arch = "aarch64")]
+#[inline]
+pub fn clear_memory(ptr: *mut u8, bits: usize) {
+    use sel4_vspace::clean_cache_range_ram;
+
+    unsafe {
+        core::slice::from_raw_parts_mut(ptr, bit!(bits)).fill(0);
+        clean_cache_range_ram(
+            ptr as usize,
+            ptr_to_usize_add(ptr, bit!(bits) - 1),
+            pptr!(ptr).to_paddr(),
+        );
+    }
+}
+
+// static inline void clearMemory_PT(word_t *ptr, word_t bits)
+// {
+//     memzero(ptr, (1ul << (bits)));
+//     cleanCacheRange_PoU((word_t)ptr, (word_t)ptr + (1ul << (bits)) - 1,
+//                         addrFromPPtr(ptr));
+// }
+
+// #[cfg(target_arch = "aarch64")]
+// #[inline]
+// pub fn clear_memory_pt(ptr: *mut u8, bits: usize) {
+//     use sel4_vspace::{clean_cache_range_pou, pptr_to_paddr};
+
+//     unsafe {
+//         core::slice::from_raw_parts_mut(ptr, bit!(bits)).fill(0);
+//         clean_cache_range_pou(
+//             ptr as usize,
+//             ptr.add(bit!(bits) - 1) as usize,
+//             pptr_to_paddr(ptr as usize),
+//         );
+//     }
+// }
+
+#[inline]
+#[cfg(target_arch = "aarch64")]
+pub fn set_vtable(addr: usize) {
+    use aarch64_cpu::registers::Writeable;
+    dsb();
+    #[cfg(feature = "hypervisor")]
+    aarch64_cpu::registers::VBAR_EL2.set(addr as _);
+    #[cfg(not(feature = "hypervisor"))]
+    aarch64_cpu::registers::VBAR_EL1.set(addr as _);
+    isb();
+}
+
+#[inline]
+#[cfg(target_arch = "aarch64")]
+pub fn fpsime_hw_cap_test() -> bool {
+    let mut id_aa64pfr0: usize;
+
+    // 读取系统寄存器
+    unsafe {
+        core::arch::asm!("mrs {}, id_aa64pfr0_el1", out(reg) id_aa64pfr0);
+    }
+
+    // 检查硬件是否支持FP和ASIMD
+    if ((id_aa64pfr0 >> ID_AA64PFR0_EL1_FP) & mask_bits!(4)) == mask_bits!(4)
+        || ((id_aa64pfr0 >> ID_AA64PFR0_EL1_ASIMD) & mask_bits!(4)) == mask_bits!(4)
+    {
+        return false;
+    }
+
+    true
+}

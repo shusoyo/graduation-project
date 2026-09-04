@@ -1,0 +1,10 @@
+{
+    "name": "sel4_vspace",
+    "description": "Basic module for building ReL4, defining the data structure and operation interface of the virtual address space.",
+    "authors": [{
+      "name": "CtrlZ233",
+      "email": "ctrlz.donghai@gmail.com"
+    }],
+    "keywords": ["microkernel"],
+    "doc_url": "https://github.com/reL4team2/sel4_vspace/blob/main/README.md"
+  }

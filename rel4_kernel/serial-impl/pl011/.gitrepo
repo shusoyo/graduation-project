@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:reL4team2/serial-impl-pl011.git
+	branch = master
+	commit = 9cbbaa89afc9fe1084d1e9818aee0a7536a7e363
+ 	parent = 26b48afd2b2342d34e698974ef6cb68689cbfbbf
+	method = merge
+	cmdver = 0.4.9

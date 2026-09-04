@@ -1,0 +1,18 @@
+[package]
+name = "sel4_task"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sel4_common = { path = "../sel4_common" }
+sel4_cspace = { path = "../sel4_cspace" }
+sel4_vspace = { path = "../sel4_vspace" }
+log = "0.4.21"
+cfg-if = "1.0"
+rel4-utils = { workspace = true }
+rel4-arch = { workspace = true }
+
+[features]
+enable_smp = []
+kernel_mcs = []
+have_fpu = []

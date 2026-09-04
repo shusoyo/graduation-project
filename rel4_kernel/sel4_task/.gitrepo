@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = git@github.com:reL4team2/sel4_task.git
+	branch = master
+	commit = e8257a6c4de01356f4a6671a754fcca585c1af27
+ 	parent = 26b48afd2b2342d34e698974ef6cb68689cbfbbf
+	method = merge
+	cmdver = 0.4.9

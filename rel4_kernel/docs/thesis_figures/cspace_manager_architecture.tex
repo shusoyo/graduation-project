@@ -1,0 +1,254 @@
+\documentclass[tikz,border=3pt]{standalone}
+
+\usepackage[UTF8]{ctex}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usetikzlibrary{positioning,arrows.meta,calc,fit,backgrounds}
+
+% ===== Colors =====
+\definecolor{capblue}{RGB}{222,237,252}
+\definecolor{slotcyan}{RGB}{218,244,241}
+\definecolor{mdborange}{RGB}{253,235,211}
+\definecolor{cdtyellow}{RGB}{255,246,198}
+\definecolor{mgrgreen}{RGB}{225,242,218}
+\definecolor{opred}{RGB}{248,222,222}
+\definecolor{framegray}{RGB}{70,70,70}
+\definecolor{textgray}{RGB}{35,35,35}
+
+\begin{document}
+
+\begin{tikzpicture}[
+    font=\small,
+    text=textgray,
+    >=Latex,
+    group/.style={
+        rectangle,
+        rounded corners=5pt,
+        draw=framegray,
+        line width=0.9pt,
+        inner sep=3pt
+    },
+    groupTitle/.style={
+        anchor=west,
+        align=left,
+        text=framegray
+    },
+    cell/.style={
+        rectangle,
+        rounded corners=3pt,
+        draw=framegray!80,
+        line width=0.65pt,
+        fill=white,
+        align=center,
+        minimum height=6.5mm,
+        inner xsep=1.8pt,
+        inner ysep=1.4pt
+    },
+    widecell/.style={
+        cell,
+        minimum width=27mm
+    },
+    midcell/.style={
+        cell,
+        minimum width=34mm
+    },
+    arrow/.style={
+        -{Latex[length=2.2mm,width=1.7mm]},
+        draw=framegray,
+        line width=0.8pt
+    },
+    note/.style={
+        font=\footnotesize,
+        align=center,
+        text=framegray
+    }
+]
+
+% ===== Capability semantics layer =====
+\node[widecell] (captype) at (-6.6, 6.80) {
+    \textbf{能力类型}\\[-0.5mm]
+    \footnotesize Null / Endpoint / CNode
+};
+\node[widecell, right=3mm of captype] (obj) {
+    \textbf{对象引用}\\[-0.5mm]
+    \footnotesize Object ID / Size
+};
+\node[widecell, right=3mm of obj] (rights) {
+    \textbf{访问权限}\\[-0.5mm]
+    \footnotesize Read / Write / Grant
+};
+\node[widecell, right=3mm of rights] (badge) {
+    \textbf{Badge}\\[-0.5mm]
+    \footnotesize 标识与派生信息
+};
+\node[widecell, right=3mm of badge] (untyped) {
+    \textbf{Untyped}\\[-0.5mm]
+    \footnotesize 内存区域能力
+};
+\node[widecell, right=3mm of untyped] (zombie) {
+    \textbf{Zombie}\\[-0.5mm]
+    \footnotesize 删除传播状态
+};
+
+% ===== Slot object layer =====
+\node[midcell] (slotid) at (-4.8, 4.45) {
+    \textbf{槽位身份}\\[-0.5mm]
+    \footnotesize CNode + Slot Index
+};
+\node[midcell, right=4mm of slotid] (mdbmeta) {
+    \textbf{MDB 元数据}\\[-0.5mm]
+    \footnotesize prev / next / revocable
+};
+\node[midcell, right=4mm of mdbmeta] (capcontent) {
+    \textbf{能力内容}\\[-0.5mm]
+    \footnotesize Cap Payload
+};
+\node[midcell, right=4mm of capcontent] (slotobs) {
+    \textbf{局部观察}\\[-0.5mm]
+    \footnotesize Empty / Occupied / Active
+};
+
+% ===== MDB graph layer =====
+\node[midcell] (prevnext) at (-5.4, 2.00) {
+    \textbf{前驱 / 后继}\\[-0.5mm]
+    \footnotesize prev-next consistency
+};
+\node[midcell, below=3mm of prevnext] (active) {
+    \textbf{活跃槽位集合}\\[-0.5mm]
+    \footnotesize reachable active slots
+};
+\node[midcell, right=4mm of prevnext] (edit) {
+    \textbf{局部图编辑}\\[-0.5mm]
+    \footnotesize splice / detach / relink
+};
+\node[midcell, below=3mm of edit] (mdbwf) {
+    \textbf{MDB 不变量}\\[-0.5mm]
+    \footnotesize acyclic / no dangling edge
+};
+
+% ===== CDT derivation layer =====
+\node[midcell] (parent) at (3.0, 2.00) {
+    \textbf{父子关系}\\[-0.5mm]
+    \footnotesize parent / child link
+};
+\node[midcell, below=3mm of parent] (original) {
+    \textbf{原始性标记}\\[-0.5mm]
+    \footnotesize original / derived
+};
+\node[midcell, right=4mm of parent] (derive) {
+    \textbf{派生状态}\\[-0.5mm]
+    \footnotesize same object / weaker rights
+};
+\node[midcell, below=3mm of derive] (cdtwf) {
+    \textbf{CDT 不变量}\\[-0.5mm]
+    \footnotesize tree order / derivation wf
+};
+
+% ===== Manager composition layer =====
+\node[midcell] (resolve) at (-5.2, -1.25) {
+    \textbf{解析与定位}\\[-0.5mm]
+    \footnotesize resolve slot path
+};
+\node[midcell, right=4mm of resolve] (precond) {
+    \textbf{前置条件}\\[-0.5mm]
+    \footnotesize empty / valid / rights
+};
+\node[midcell, right=4mm of precond] (update) {
+    \textbf{状态更新编排}\\[-0.5mm]
+    \footnotesize slot + MDB + CDT
+};
+\node[midcell, right=4mm of update] (proof) {
+    \textbf{一致性证明}\\[-0.5mm]
+    \footnotesize preserve manager wf
+};
+
+% ===== CSpace operations layer =====
+\node[widecell] (opresolve) at (-6.2, -3.45) {
+    \textbf{Resolve}\\[-0.5mm]
+    \footnotesize 路径解析
+};
+\node[widecell, right=3mm of opresolve] (opinsert) {
+    \textbf{Insert}\\[-0.5mm]
+    \footnotesize 插入派生能力
+};
+\node[widecell, right=3mm of opinsert] (opmove) {
+    \textbf{Move}\\[-0.5mm]
+    \footnotesize 移动槽位内容
+};
+\node[widecell, right=3mm of opmove] (opswap) {
+    \textbf{Swap}\\[-0.5mm]
+    \footnotesize 交换两个槽位
+};
+\node[widecell, right=3mm of opswap] (opdelete) {
+    \textbf{Delete}\\[-0.5mm]
+    \footnotesize 删除与传播
+};
+\node[widecell, right=3mm of opdelete] (oprevoke) {
+    \textbf{Revoke}\\[-0.5mm]
+    \footnotesize 子树回收
+};
+
+% ===== Title padding anchors =====
+\coordinate (capTitlePad) at ($(captype.north)+(0,5.2mm)$);
+\coordinate (slotTitlePad) at ($(slotid.north)+(0,5.8mm)$);
+\coordinate (mdbTitlePad) at ($(prevnext.north)+(0,5.8mm)$);
+\coordinate (cdtTitlePad) at ($(parent.north)+(0,5.8mm)$);
+\coordinate (mgrTitlePad) at ($(resolve.north)+(0,5.8mm)$);
+\coordinate (opTitlePad) at ($(opresolve.north)+(0,5.8mm)$);
+
+% ===== Background group boxes =====
+\begin{scope}[on background layer]
+\node[group, fill=capblue, fit=(capTitlePad)(captype)(obj)(rights)(badge)(untyped)(zombie)] (gcap) {};
+\node[group, fill=slotcyan, fit=(slotTitlePad)(slotid)(capcontent)(mdbmeta)(slotobs)] (gslot) {};
+\node[group, fill=mdborange, fit=(mdbTitlePad)(prevnext)(active)(edit)(mdbwf)] (gmdb) {};
+\node[group, fill=cdtyellow, fit=(cdtTitlePad)(parent)(original)(derive)(cdtwf)] (gcdt) {};
+\node[group, fill=mgrgreen, fit=(mgrTitlePad)(resolve)(precond)(update)(proof)] (gmgr) {};
+\node[group, fill=opred, fit=(opTitlePad)(opresolve)(opinsert)(opmove)(opswap)(opdelete)(oprevoke)] (gop) {};
+\end{scope}
+
+% ===== Group titles with short explanations =====
+\node[groupTitle] at ($(gcap.north west)+(2mm,-2.2mm)$) {
+    \textbf{能力语义层}\quad{\scriptsize 定义槽位中能力的类型、对象、权限与生命周期语义}
+};
+\node[groupTitle] at ($(gslot.north west)+(2mm,-2.5mm)$) {
+    \textbf{槽位对象层}\quad{\scriptsize 承载能力内容与局部 MDB 元数据}
+};
+\node[groupTitle] at ($(gmdb.north west)+(2mm,-2.5mm)$) {
+    \textbf{MDB 图层}\quad{\scriptsize 将 MDB 元数据解释为可编辑的图结构}
+};
+\node[groupTitle] at ($(gcdt.north west)+(2mm,-2.5mm)$) {
+    \textbf{CDT 派生层}\quad{\scriptsize 刻画能力复制、弱化与父子派生关系}
+};
+\node[groupTitle] at ($(gmgr.north west)+(2mm,-2.5mm)$) {
+    \textbf{管理器组合层}\quad{\scriptsize 编排状态更新并保持跨层一致性}
+};
+\node[groupTitle] at ($(gop.north west)+(2mm,-2.5mm)$) {
+    \textbf{CSpace 核心操作}\quad{\scriptsize 由管理器驱动解析、插入、移动、交换与删除传播}
+};
+
+% ===== Main semantic-flow arrows =====
+\draw[arrow] ($(rights.south)!0.5!(badge.south)$) -- (capcontent.north);
+\draw[arrow] (mdbmeta.south) -- ($(prevnext.north)!0.5!(edit.north)$);
+\draw[arrow] (capcontent.south) -- ($(parent.north)!0.5!(derive.north)$);
+\draw[arrow] ($(edit.south)!0.5!(mdbwf.south)$) -- (update.north);
+\draw[arrow] ($(derive.south)!0.5!(cdtwf.south)$) -- (proof.north);
+\draw[arrow] ($(update.south)!0.5!(proof.south)$) -- ($(opmove.north)!0.5!(opdelete.north)$);
+
+% ===== Side annotations =====
+\node[note, left=7mm of gcap] (n1) {语义\\建模};
+\node[note, left=7mm of gslot] (n2) {槽位\\抽象};
+\node[note, left=7mm of gmdb] (n3) {结构\\不变量};
+\node[note, right=7mm of gcdt] (n4) {派生\\关系};
+\node[note, left=7mm of gmgr] (n5) {组合\\证明};
+\node[note, left=7mm of gop] (n6) {操作\\语义};
+
+\draw[framegray!45, line width=0.5pt] (n1.east) -- (gcap.west);
+\draw[framegray!45, line width=0.5pt] (n2.east) -- (gslot.west);
+\draw[framegray!45, line width=0.5pt] (n3.east) -- (gmdb.west);
+\draw[framegray!45, line width=0.5pt] (n4.west) -- (gcdt.east);
+\draw[framegray!45, line width=0.5pt] (n5.east) -- (gmgr.west);
+\draw[framegray!45, line width=0.5pt] (n6.east) -- (gop.west);
+
+\end{tikzpicture}
+
+\end{document}

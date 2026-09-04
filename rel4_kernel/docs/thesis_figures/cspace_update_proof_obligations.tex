@@ -1,0 +1,189 @@
+\documentclass[tikz,border=3pt]{standalone}
+
+\usepackage[UTF8]{ctex}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usetikzlibrary{positioning,arrows.meta,calc,fit,backgrounds}
+
+% ===== Colors: consistent with cspace_manager_architecture.tex =====
+\definecolor{preblue}{RGB}{222,237,252}
+\definecolor{execblue}{RGB}{218,244,241}
+\definecolor{mgrgreen}{RGB}{225,242,218}
+\definecolor{opred}{RGB}{248,222,222}
+\definecolor{framegray}{RGB}{70,70,70}
+\definecolor{textgray}{RGB}{35,35,35}
+
+\begin{document}
+
+\begin{tikzpicture}[
+    font=\small,
+    text=textgray,
+    >=Latex,
+    group/.style={
+        rectangle,
+        rounded corners=5pt,
+        draw=framegray,
+        line width=0.9pt,
+        inner sep=5pt
+    },
+    groupTitle/.style={
+        anchor=west,
+        align=left,
+        text=framegray
+    },
+    cell/.style={
+        rectangle,
+        rounded corners=3pt,
+        draw=framegray!80,
+        line width=0.65pt,
+        fill=white,
+        align=center,
+        minimum height=9mm,
+        inner xsep=3pt,
+        inner ysep=2pt
+    },
+    smallcell/.style={
+        cell,
+        text width=30mm
+    },
+    widecell/.style={
+        cell,
+        text width=46mm
+    },
+    arrow/.style={
+        -{Latex[length=2.2mm,width=1.7mm]},
+        draw=framegray,
+        line width=0.85pt
+    },
+    softarrow/.style={
+        -{Latex[length=2.0mm,width=1.5mm]},
+        draw=framegray!72,
+        line width=0.65pt
+    },
+    merge/.style={
+        circle,
+        draw=framegray!80,
+        fill=white,
+        line width=0.65pt,
+        minimum size=3.2mm,
+        inner sep=0pt
+    },
+    formula/.style={
+        font=\footnotesize,
+        align=center,
+        text=framegray
+    }
+]
+
+% ===== Column 1: Hoare-style input =====
+\node[smallcell] (pre) at (-7.4, 1.05) {
+    \textbf{操作前状态}\\[-0.5mm]
+    \footnotesize $\mathit{wf}(M)$\\
+    \footnotesize 调用前提
+};
+\node[smallcell] (exec) at (-7.4, -0.65) {
+    \textbf{运行时操作}\\[-0.5mm]
+    \footnotesize insert / move\\
+    \footnotesize swap / delete
+};
+
+% ===== Column 2: layered postconditions =====
+\node[widecell] (slotpost) at (-2.15, 2.05) {
+    \textbf{槽位后状态}\\[-0.5mm]
+    \footnotesize \texttt{slot\_post}\\
+    \footnotesize 能力内容、空槽状态、局部元数据
+};
+\node[widecell] (mdbpost) at (-2.15, 0.35) {
+    \textbf{MDB 图后状态}\\[-0.5mm]
+    \footnotesize \texttt{mdb\_post}\\
+    \footnotesize 前驱后继、邻域修补、图良构性
+};
+\node[widecell] (cdtpost) at (-2.15, -1.35) {
+    \textbf{CDT 派生树后状态}\\[-0.5mm]
+    \footnotesize \texttt{cdt\_post}\\
+    \footnotesize 父子关系、原始性、派生状态
+};
+
+% ===== Column 3: composition obligations =====
+\node[widecell] (cross) at (3.45, 1.25) {
+    \textbf{跨层一致性}\\[-0.5mm]
+    \footnotesize \texttt{cross\_layer\_ok}\\
+    \footnotesize 槽位、MDB、CDT 与能力语义一致
+};
+\node[widecell] (frame) at (3.45, -0.85) {
+    \textbf{帧条件}\\[-0.5mm]
+    \footnotesize \texttt{frame\_ok}\\
+    \footnotesize 未影响槽位、边和派生关系保持不变
+};
+
+% ===== Column 4: final post-state =====
+\node[smallcell] (post) at (8.3, 0.25) {
+    \textbf{操作后状态}\\[-0.5mm]
+    \footnotesize $\mathit{wf}(M')$\\
+    \footnotesize \texttt{post\_op}
+};
+
+% ===== Merge points for clean routing =====
+\node[merge] (fanout) at (-5.25, -0.65) {};
+\node[merge] (localmerge) at (0.65, 0.35) {};
+\node[merge] (composemerge) at (6.05, 0.25) {};
+
+% ===== Title padding anchors =====
+\coordinate (inputTitlePad) at ($(pre.north)+(0,5.8mm)$);
+\coordinate (layerTitlePad) at ($(slotpost.north)+(0,5.8mm)$);
+\coordinate (composeTitlePad) at ($(cross.north)+(0,5.8mm)$);
+\coordinate (resultTitlePad) at ($(post.north)+(0,5.8mm)$);
+
+% ===== Background groups =====
+\begin{scope}[on background layer]
+\node[group, fill=preblue, fit=(inputTitlePad)(pre)(exec)] (ginput) {};
+\node[group, fill=execblue, fit=(layerTitlePad)(slotpost)(mdbpost)(cdtpost)] (glayer) {};
+\node[group, fill=mgrgreen, fit=(composeTitlePad)(cross)(frame)] (gcompose) {};
+\node[group, fill=opred, fit=(resultTitlePad)(post)] (gresult) {};
+\end{scope}
+
+% ===== Group titles =====
+\node[groupTitle] at ($(ginput.north west)+(2mm,-2.5mm)$) {
+    \textbf{Hoare 风格入口}\quad{\scriptsize requires}
+};
+\node[groupTitle] at ($(glayer.north west)+(2mm,-2.5mm)$) {
+    \textbf{分层后置条件}\quad{\scriptsize slot / MDB / CDT}
+};
+\node[groupTitle] at ($(gcompose.north west)+(2mm,-2.5mm)$) {
+    \textbf{组合证明义务}\quad{\scriptsize consistency + frame}
+};
+\node[groupTitle] at ($(gresult.north west)+(2mm,-2.5mm)$) {
+    \textbf{管理器层结论}\quad{\scriptsize ensures}
+};
+
+% ===== Main arrows =====
+\draw[arrow] (pre) -- (exec);
+\draw[arrow] (exec.east) -- (fanout);
+\draw[arrow] (fanout) |- (slotpost.west);
+\draw[arrow] (fanout) -- (mdbpost.west);
+\draw[arrow] (fanout) |- (cdtpost.west);
+
+\draw[arrow] (slotpost.east) -| (localmerge);
+\draw[arrow] (mdbpost.east) -- (localmerge);
+\draw[arrow] (cdtpost.east) -| (localmerge);
+
+\draw[arrow] (localmerge) |- (cross.west);
+\draw[softarrow] (localmerge) |- (frame.west);
+
+\draw[arrow] (cross.east) -| (composemerge);
+\draw[arrow] (frame.east) -| (composemerge);
+\draw[arrow] (composemerge) -- (post.west);
+
+% ===== Formula hints =====
+\node[formula, below=3.5mm of exec] (preformula) {
+    $\{\mathit{wf}(M) \land \mathit{pre}_{op}(M)\}$
+};
+\node[formula, below=3.5mm of post] (postformula) {
+    $\{\mathit{wf}(M') \land \mathit{post}_{op}(M,M')\}$
+};
+\draw[framegray!45, line width=0.5pt] (preformula.north) -- (exec.south);
+\draw[framegray!45, line width=0.5pt] (postformula.north) -- (post.south);
+
+\end{tikzpicture}
+
+\end{document}

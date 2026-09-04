@@ -1,0 +1,44 @@
+name: push-to-discrete-repo
+on:
+  push:
+    branches: [master]
+jobs:
+  push:
+    if: ${{ ! contains(github.event.head_commit.message, 'git subrepo')}}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+      - name: Setup Env
+        run: |
+          git clone https://github.com/ingydotnet/git-subrepo /opt/git-subrepo 
+          echo 'source /opt/git-subrepo/.rc' >> ~/.bashrc
+          git clone git@github.com:reL4team2/rel4-integral.git
+          cd rel4-integral
+          PARENT_COMMIT_ID=$(git log -1 --pretty=%H | head -n 1)
+          INTEGRAL_COMMIT_MESSAGE=$(git log -1 --pretty=%B | head -n 1)
+          echo "INTEGRAL_COMMIT_MESSAGE=${INTEGRAL_COMMIT_MESSAGE}" >> $GITHUB_ENV
+          echo "PARENT_COMMIT_ID=${PARENT_COMMIT_ID}" >> $GITHUB_ENV
+          git config user.name "$(git log -n 1 --pretty=format:%an)"
+          git config user.email "$(git log -n 1 --pretty=format:%ae)"
+      - name: Pull Latest Changes
+        run: |
+          source /opt/git-subrepo/.rc
+          cd rel4-integral
+          git subrepo pull --all
+      - name: Push To Discrete Repo
+        run: |
+          source /opt/git-subrepo/.rc
+          cd rel4-integral
+          git subrepo push --all
+      - name: Update Current Repo
+        run: |
+          source /opt/git-subrepo/.rc
+          cd rel4-integral
+          git reset ${PARENT_COMMIT_ID}
+          ./update.sh
+          git add .
+          git commit -m "git subrepo update commit for $INTEGRAL_COMMIT_MESSAGE"
+          git push 

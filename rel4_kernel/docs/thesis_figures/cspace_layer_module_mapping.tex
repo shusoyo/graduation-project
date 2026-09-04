@@ -1,0 +1,223 @@
+\documentclass[tikz,border=3pt]{standalone}
+
+\usepackage[UTF8]{ctex}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usetikzlibrary{positioning,arrows.meta,calc,fit,backgrounds}
+
+% ===== Colors: aligned with existing thesis figures =====
+\definecolor{capblue}{RGB}{222,237,252}
+\definecolor{slotcyan}{RGB}{218,244,241}
+\definecolor{mdborange}{RGB}{253,235,211}
+\definecolor{cdtyellow}{RGB}{255,246,198}
+\definecolor{mgrgreen}{RGB}{225,242,218}
+\definecolor{opred}{RGB}{248,222,222}
+\definecolor{framegray}{RGB}{70,70,70}
+\definecolor{textgray}{RGB}{35,35,35}
+
+\begin{document}
+
+\begin{tikzpicture}[
+    font=\small,
+    text=textgray,
+    >=Latex,
+    group/.style={
+        rectangle,
+        rounded corners=5pt,
+        draw=framegray,
+        line width=0.9pt,
+        inner sep=5pt
+    },
+    groupTitle/.style={
+        anchor=west,
+        align=left,
+        text=framegray
+    },
+    cell/.style={
+        rectangle,
+        rounded corners=3pt,
+        draw=framegray!80,
+        line width=0.65pt,
+        fill=white,
+        align=center,
+        minimum height=11mm,
+        inner xsep=3pt,
+        inner ysep=2pt
+    },
+    maincell/.style={
+        cell,
+        text width=122mm
+    },
+    subcell/.style={
+        cell,
+        text width=37mm,
+        minimum height=14mm
+    },
+    sidecell/.style={
+        cell,
+        text width=43mm,
+        minimum height=15mm
+    },
+    arrow/.style={
+        -{Latex[length=2.2mm,width=1.7mm]},
+        draw=framegray,
+        line width=0.85pt
+    },
+    softarrow/.style={
+        -{Latex[length=2.0mm,width=1.5mm]},
+        draw=framegray!72,
+        line width=0.7pt
+    },
+    note/.style={
+        font=\footnotesize,
+        align=center,
+        text=framegray
+    }
+]
+
+% ===== Main layered mapping =====
+\node[maincell] (cap) at (0, 6.45) {
+    \textbf{能力语义层}\quad
+    \texttt{capability}\quad
+    \footnotesize 定义能力类型、对象、权限、badge、untyped 与 zombie 语义，是 CSpace 证明的能力语义基底
+};
+
+\node[maincell, below=10mm of cap] (cte) {
+    \textbf{槽位对象层}\quad
+    \texttt{cspace::cte}\quad
+    \footnotesize 将 \texttt{cap + mdb\_node} 组织为槽位对象，承接局部规格、最终能力判断与桥接义务
+};
+
+\node[subcell] (mdb) at (-4.45, 1.10) {
+    \textbf{MDB 图层}\\[-0.4mm]
+    \texttt{cspace::mdb}\\[-0.3mm]
+    \footnotesize 维护活跃槽位与\\
+    \footnotesize 前驱后继图编辑
+};
+
+\node[subcell] (cdt) at (4.45, 1.10) {
+    \textbf{CDT 派生层}\\[-0.4mm]
+    \texttt{cspace::cdt}\\[-0.3mm]
+    \footnotesize 显式表达 parent\_of、\\
+    \footnotesize is\_original 与派生树义务
+};
+
+% ===== Manager core group =====
+\node[subcell] (spec) at (-4.85, -2.45) {
+    \textbf{规格层}\\[-0.4mm]
+    \texttt{manager::spec}\\[-0.3mm]
+    \footnotesize 定义总 \texttt{wf}、\\
+    \footnotesize 跨层关系与删除规格
+};
+
+\node[subcell] (impl) at (0, -2.45) {
+    \textbf{执行层}\\[-0.4mm]
+    \texttt{manager::impl\_*}\\[-0.3mm]
+    \footnotesize 承载 insert / move / swap /\\
+    \footnotesize delete / revoke 核心路径
+};
+
+\node[subcell] (proof) at (4.85, -2.45) {
+    \textbf{证明层}\\[-0.4mm]
+    \texttt{manager::proof}\\[-0.3mm]
+    \footnotesize 分阶段恢复 MDB / CDT，\\
+    \footnotesize 组合得到管理器层 \texttt{wf}
+};
+
+% ===== Side connection layers =====
+\node[sidecell] (resolve) at (-4.95, -6.25) {
+    \textbf{解析层}\\[-0.4mm]
+    \texttt{cspace::resolve}\\[-0.3mm]
+    \footnotesize 给出 \texttt{resolve\_address\_bits}\\
+    \footnotesize 及故障分支的抽象解析语义
+};
+
+\node[sidecell] (kernel) at (4.95, -6.25) {
+    \textbf{内核连接层}\\[-0.4mm]
+    \texttt{cspace::kernel}\\
+    \footnotesize 与兼容封装层一起连接\\
+    \footnotesize kernel 入口与管理器实例化
+};
+
+\node[note] (boundary) at (0, -8.45) {
+    \textbf{主结论边界}\\
+    \footnotesize 最强机械化结论集中在 \texttt{CSpaceManager::*} 核心层，\\
+    \footnotesize 解析层形成独立查找路线，kernel 连接层暂不作为最强结论层
+};
+
+% ===== Title padding anchors =====
+\coordinate (capPad) at ($(cap.north)+(0,6.4mm)$);
+\coordinate (ctePad) at ($(cte.north)+(0,5.6mm)$);
+\coordinate (mdbPad) at ($(mdb.north)+(0,6.4mm)$);
+\coordinate (cdtPad) at ($(cdt.north)+(0,6.4mm)$);
+\coordinate (mgrPad) at ($(spec.north)+(0,6.4mm)$);
+\coordinate (resolvePad) at ($(resolve.north)+(0,6.4mm)$);
+\coordinate (kernelPad) at ($(kernel.north)+(0,6.4mm)$);
+% ===== Background groups =====
+\begin{scope}[on background layer]
+\node[group, fill=capblue, fit=(capPad)(cap)] (gcap) {};
+\node[group, fill=slotcyan, fit=(ctePad)(cte)] (gcte) {};
+\node[group, fill=mdborange, fit=(mdbPad)(mdb)] (gmdb) {};
+\node[group, fill=cdtyellow, fit=(cdtPad)(cdt)] (gcdt) {};
+\node[group, fill=mgrgreen, fit=(mgrPad)(spec)(impl)(proof)] (gmgr) {};
+\node[group, fill=opred, fit=(resolvePad)(resolve)] (gresolve) {};
+\node[group, fill=opred, fit=(kernelPad)(kernel)] (gkernel) {};
+\end{scope}
+
+% ===== Group titles =====
+\node[groupTitle] at ($(gcap.north west)+(2mm,-2.5mm)$) {
+    \textbf{基础语义层}
+};
+\node[groupTitle] at ($(gcte.north west)+(2mm,-2.5mm)$) {
+    \textbf{槽位抽象层}
+};
+\node[groupTitle] at ($(gmdb.north west)+(2mm,-2.5mm)$) {
+    \textbf{结构层}
+};
+\node[groupTitle] at ($(gcdt.north west)+(2mm,-2.5mm)$) {
+    \textbf{派生层}
+};
+\node[groupTitle] at ($(gmgr.north west)+(2mm,-2.5mm)$) {
+    \textbf{管理器核心层}
+};
+\node[groupTitle] at ($(gresolve.north west)+(2mm,-2.5mm)$) {
+    \textbf{解析路线}
+};
+\node[groupTitle] at ($(gkernel.north west)+(2mm,-2.5mm)$) {
+    \textbf{内核桥接}
+};
+
+% ===== Main flow arrows =====
+\draw[arrow] (cap.south) -- (cte.north);
+\draw[arrow] (cte.south) |- (mdb.north);
+\draw[arrow] (cte.south) |- (cdt.north);
+
+\draw[arrow] (mdb.south) |- (spec.north);
+\draw[arrow] (cdt.south) |- (proof.north);
+
+\draw[softarrow] (spec.east) -- (impl.west);
+\draw[softarrow] (impl.east) -- (proof.west);
+
+\draw[softarrow] (resolve.north) -- (spec.south);
+\draw[softarrow] (kernel.north) -- (proof.south);
+
+\draw[framegray!45, dashed, line width=0.55pt] (gmgr.south) -- (boundary.north);
+
+% ===== Side annotations =====
+\node[note, left=10mm of gcap] (n1) {语义\\基底};
+\node[note, left=10mm of gcte] (n2) {槽位\\抽象};
+\node[note, left=10mm of gmdb] (n3) {图结构\\恢复};
+\node[note, right=10mm of gcdt] (n4) {派生树\\保持};
+\node[note, left=10mm of gmgr] (n5) {核心层\\主结论};
+\node[note, right=10mm of gkernel] (n6) {接口层\\边界};
+
+\draw[framegray!45, line width=0.5pt] (n1.east) -- (gcap.west);
+\draw[framegray!45, line width=0.5pt] (n2.east) -- (gcte.west);
+\draw[framegray!45, line width=0.5pt] (n3.east) -- (gmdb.west);
+\draw[framegray!45, line width=0.5pt] (n4.west) -- (gcdt.east);
+\draw[framegray!45, line width=0.5pt] (n5.east) -- (gmgr.west);
+\draw[framegray!45, line width=0.5pt] (n6.west) -- (gkernel.east);
+
+\end{tikzpicture}
+
+\end{document}

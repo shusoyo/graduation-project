@@ -1,0 +1,53 @@
+use crate::ffi::kernel_stack_alloc;
+// use crate::idle_thread;
+use super::{sp, CONTEXT_REG_NUM, SSTATUS, SSTATUS_SPIE, SSTATUS_SPP};
+use super::{FAULT_MESSAGES, MSG_REGISTER, NEXT_IP};
+use crate::sel4_config::CONFIG_KERNEL_STACK_BITS;
+
+#[repr(C)]
+#[derive(Debug, PartialEq, Clone)]
+pub struct FPUState {
+    #[cfg(feature = "riscv_ext_d")]
+    pub regs: [u64; 32],
+    #[cfg(feature = "riscv_ext_f")]
+    pub fregs: [u32; 32],
+    pub fcsr: u32,
+}
+/// This is `arch_tcb_t` in the sel4_c_impl.
+#[repr(C)]
+#[derive(Debug, PartialEq, Clone)]
+pub struct ArchTCB {
+    pub(in crate::arch) registers: [usize; CONTEXT_REG_NUM],
+    pub(in crate::arch) fpu: FPUState,
+}
+
+impl Default for ArchTCB {
+    fn default() -> Self {
+        let mut registers = [0; CONTEXT_REG_NUM];
+        registers[SSTATUS] = 0x00040020;
+        Self {
+            registers,
+            fpu: FPUState {
+                #[cfg(feature = "riscv_ext_d")]
+                regs: [0; 32],
+                #[cfg(feature = "riscv_ext_f")]
+                fregs: [0; 32],
+                fcsr: 0,
+            },
+        }
+    }
+}
+
+impl ArchTCB {
+    /// Config the registers fot the idle thread.
+    pub fn config_idle_thread(&mut self, idle_thread: usize, core: usize) {
+        self.registers[NEXT_IP] = idle_thread;
+        self.registers[SSTATUS] = SSTATUS_SPP | SSTATUS_SPIE;
+        self.registers[sp] = kernel_stack_alloc.get_stack_top(core);
+    }
+
+    #[inline]
+    pub fn fpu_state_ptr(&mut self) -> *const FPUState {
+        &self.fpu as *const FPUState
+    }
+}

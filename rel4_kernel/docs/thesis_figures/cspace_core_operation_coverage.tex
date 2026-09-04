@@ -1,0 +1,167 @@
+\documentclass[tikz,border=3pt]{standalone}
+
+\usepackage[UTF8]{ctex}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usetikzlibrary{positioning,arrows.meta,calc,fit,backgrounds}
+
+% ===== Colors: softened for a lighter paper look =====
+\definecolor{outergray}{RGB}{249,249,249}
+\definecolor{capblue}{RGB}{242,247,255}
+\definecolor{slotcyan}{RGB}{242,255,252}
+\definecolor{mgrgreen}{RGB}{242,255,242}
+\definecolor{framegray}{RGB}{70,70,70}
+\definecolor{textgray}{RGB}{35,35,35}
+
+\begin{document}
+
+\begin{tikzpicture}[
+    font=\small,
+    text=textgray,
+    >=Latex,
+    group/.style={
+        rectangle,
+        rounded corners=5pt,
+        draw=framegray,
+        line width=0.9pt,
+        inner sep=5pt
+    },
+    majorgroup/.style={
+        rectangle,
+        rounded corners=6pt,
+        draw=framegray!60,
+        line width=0.75pt,
+        inner sep=7pt,
+        fill=outergray
+    },
+    groupTitle/.style={
+        anchor=west,
+        align=left,
+        font=\bfseries\small,
+        text=framegray
+    },
+    cell/.style={
+        rectangle,
+        rounded corners=3pt,
+        draw=framegray!80,
+        line width=0.65pt,
+        fill=white,
+        align=center,
+        minimum height=10mm,
+        inner xsep=3pt,
+        inner ysep=2pt
+    },
+    opcell/.style={
+        cell,
+        text width=30mm
+    },
+    proofcell/.style={
+        cell,
+        text width=52mm
+    },
+    resultcell/.style={
+        cell,
+        text width=46mm,
+        minimum height=54mm
+    },
+    arrow/.style={
+        -{Latex[length=2.2mm,width=1.7mm]},
+        draw=framegray,
+        line width=0.85pt
+    },
+    softarrow/.style={
+        -{Latex[length=2.0mm,width=1.5mm]},
+        draw=framegray!72,
+        line width=0.7pt
+    }
+]
+
+% ===== Column 1: operation classes =====
+\node[opcell] (query) at (-6.2, 2.85) {
+    \textbf{能力关系与查询}\\[-0.4mm]
+    \footnotesize 能力谓词\\
+    \footnotesize 一致性判断
+};
+\node[opcell] (resolve) at (-6.2, 0.95) {
+    \textbf{路径解析}\\[-0.4mm]
+    \footnotesize 地址位解析\\
+    \footnotesize 槽位查找
+};
+\node[opcell] (update) at (-6.2, -0.95) {
+    \textbf{插入、移动、交换}\\[-0.4mm]
+    \footnotesize 局部更新\\
+    \footnotesize 操作族
+};
+\node[opcell] (delete) at (-6.2, -2.85) {
+    \textbf{删除与撤销}\\[-0.4mm]
+    \footnotesize 删除传播\\
+    \footnotesize 生命周期收尾
+};
+
+% ===== Column 2: proof support =====
+\node[proofcell] (queryproof) at (-1.0, 2.85) {
+    \textbf{能力内容语义}\\[-0.4mm]
+    \footnotesize 一致性判定、可回收性\\
+    \footnotesize 与能力关系规格
+};
+\node[proofcell] (resolveproof) at (-1.0, 0.95) {
+    \textbf{循环不变式}\\[-0.4mm]
+    \footnotesize 成功返回、提前停止\\
+    \footnotesize 与查找故障分支对应
+};
+\node[proofcell] (updateproof) at (-1.0, -0.95) {
+    \textbf{分层更新恢复}\\[-0.4mm]
+    \footnotesize 槽位后状态、MDB 图恢复\\
+    \footnotesize 与 CDT 派生关系恢复
+};
+\node[proofcell] (deleteproof) at (-1.0, -2.85) {
+    \textbf{阶段化删除契约}\\[-0.4mm]
+    \footnotesize 空槽化、僵尸能力约简\\
+    \footnotesize 删除传播与安全条件
+};
+
+% ===== Column 3: manager-level conclusion =====
+\node[resultcell] (manager) at (5.2, 0.0) {
+    \textbf{管理器核心层结论}\\[0.8mm]
+    \footnotesize 覆盖查、找、改、删四类核心行为\\[0.4mm]
+    \footnotesize 形成 CSpace 核心层形式化规格\\
+    \footnotesize 与证明产物的统一结果边界\\[0.8mm]
+    \footnotesize 结论限定在管理器核心层安全性\\
+    \footnotesize 与 \texttt{wf} 保持
+};
+
+% ===== Title padding anchors =====
+\coordinate (opTitlePad) at ($(query.north)+(0,6mm)$);
+\coordinate (proofTitlePad) at ($(queryproof.north)+(0,6mm)$);
+\coordinate (resultTitlePad) at ($(manager.north)+(0,6mm)$);
+\coordinate (leftBlockPad) at ($(query.north west)+(-1mm,7mm)$);
+\coordinate (rightBlockPad) at ($(manager.north west)+(-1mm,7mm)$);
+
+% ===== Background groups =====
+\begin{scope}[on background layer]
+\node[majorgroup, fit=(leftBlockPad)(opTitlePad)(proofTitlePad)(delete)(queryproof)] (gleft) {};
+\node[majorgroup, fit=(rightBlockPad)(resultTitlePad)(manager)] (gright) {};
+\node[group, fill=capblue, fit=(opTitlePad)(query)(resolve)(update)(delete)] (gops) {};
+\node[group, fill=slotcyan, fit=(proofTitlePad)(queryproof)(resolveproof)(updateproof)(deleteproof)] (gproofs) {};
+\node[group, fill=mgrgreen, fit=(resultTitlePad)(manager)] (gresult) {};
+\end{scope}
+
+% ===== Group titles: short only, so they stay inside the boxes =====
+\node[groupTitle] at ($(gops.north west)+(2mm,-2.7mm)$) {CSpace 行为类别};
+\node[groupTitle] at ($(gproofs.north west)+(2mm,-2.7mm)$) {证明方法与产物};
+\node[groupTitle] at ($(gresult.north west)+(2mm,-2.7mm)$) {覆盖结论};
+
+% ===== Main arrows: match the structure in the thesis text =====
+\draw[arrow] (query.east) -- (queryproof.west);
+\draw[arrow] (resolve.east) -- (resolveproof.west);
+\draw[arrow] (update.east) -- (updateproof.west);
+\draw[arrow] (delete.east) -- (deleteproof.west);
+
+\draw[softarrow] (queryproof.east) -- ($(manager.west)+(0,1.55)$);
+\draw[softarrow] (resolveproof.east) -- ($(manager.west)+(0,0.55)$);
+\draw[softarrow] (updateproof.east) -- ($(manager.west)+(0,-0.55)$);
+\draw[softarrow] (deleteproof.east) -- ($(manager.west)+(0,-1.55)$);
+
+\end{tikzpicture}
+
+\end{document}
