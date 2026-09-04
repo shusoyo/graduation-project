@@ -1,0 +1,32 @@
+(*
+ * Copyright 2020, Data61, CSIRO (ABN 41 687 119 230)
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ *)
+
+chapter Lib
+
+session Word_Lib (lib) = HOL +
+  options [timeout = 300, document=pdf]
+  sessions
+    "HOL-Library"
+    "HOL-Eisbach"
+  directories  (* not in the AFP: *)
+    "$L4V_ARCH"
+  theories (* not in the AFP: *)
+    "Distinct_Prop"
+    "$L4V_ARCH/WordSetup"
+  theories [document=false]
+    More_Int
+    Bin_sign
+    More_Arithmetic
+    Even_More_List
+    More_Sublist
+    More_Misc
+    Strict_part_mono
+    Many_More
+    Examples
+  theories
+    Guide
+  document_files
+    "root.tex"

@@ -1,0 +1,20 @@
+# Copyright 2025, Proofcraft Pty Ltd
+#
+# SPDX-License-Identifier: BSD-2-Clause
+
+# Actions to run on Push and Pull Request
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  checks:
+    name: Checks
+    uses: seL4/ci-actions/.github/workflows/push.yml@master
+    secrets:
+      token: ${{ secrets.READ_TOKEN }}

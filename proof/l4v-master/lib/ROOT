@@ -1,0 +1,151 @@
+(*
+ * Copyright 2020, Data61, CSIRO (ABN 41 687 119 230)
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ *)
+
+chapter Lib
+
+session Lib (lib) = Word_Lib +
+  sessions
+    "HOL-Library"
+    Basics
+    Eisbach_Tools
+    ML_Utils
+    Monads
+  theories
+    Lib
+    AddUpdSimps
+    List_Lib
+    SubMonadLib
+    Simulation
+    SimpStrategy
+    Extract_Conjunct
+    GenericLib
+    Corres_Adjust_Preconds
+    Requalify
+    Value_Abbreviation
+    HaskellLib_H
+    Eval_Bool
+    Bisim_UL
+    Solves_Tac
+    Crunch
+    Crunch_Instances_NonDet
+    Crunch_Instances_Trace
+    StateMonad
+    Corres_UL
+    Corres_Method
+    Find_Names
+    LemmaBucket
+    Try_Methods
+    ListLibLemmas
+    Time_Methods_Cmd
+    MonadicRewrite
+    HaskellLemmaBucket
+    FP_Eval
+    Insulin
+    ExtraCorres
+    CorresWhile
+    RCorres
+    NICTATools
+    BCorres_UL
+    Qualify
+    LexordList
+    Defs
+    Distinct_Cmd
+    Match_Abbreviation
+    ShowTypes
+    SpecValid_R
+    EquivValid
+    SplitRule
+    DataMap
+    FastMap
+    RangeMap
+    CorresK_Method
+    DetWPLib
+    Guess_ExI
+    GenericTag
+    ML_Goal_Test
+    Value_Type
+    Named_Eta
+    Rules_Tac
+    Heap_List
+    None_Top_Bot
+
+    (* should move to Monads: *)
+    NonDetMonadLemmaBucket
+
+session CLib (lib) in clib = CParser +
+  sessions
+    "HOL-Library"
+    "HOL-Statespace"
+    "HOL-Eisbach"
+    "Simpl-VCG"
+    Lib
+  theories
+    Corres_UL_C
+    CCorresLemmas
+    CCorres_Rewrite
+    Simpl_Rewrite
+    MonadicRewrite_C
+    CTranslationNICTA
+    SIMPL_Lemmas
+    SimplRewrite
+    BitFieldProofsLib
+    XPres
+
+session CorresK in "CorresK" = Lib +
+  sessions
+    ASpec
+    ExecSpec
+  theories
+    CorresK_Lemmas
+
+session LibTest (lib) in test = Refine +
+  sessions
+    Lib
+    CLib
+    ASpec
+    ExecSpec
+  theories
+    Corres_Test
+    Crunch_Test_NonDet
+    Crunch_Test_Qualified_NonDet
+    Crunch_Test_Qualified_Trace
+    Crunch_Test_Trace
+    WPTutorial
+    Match_Abbreviation_Test
+    Apply_Debug_Test
+    Insulin_Test
+    ShowTypes_Test
+    Time_Methods_Cmd_Test
+    FastMap_Test
+    RangeMap_Test
+    FP_Eval_Tests
+    Trace_Schematic_Insts_Test
+    Qualify_Test
+    Locale_Abbrev_Test
+    Value_Type_Test
+    Named_Eta_Test
+    Rules_Tac_Test
+    MonadicRewrite_Test
+    Requalify_Test
+  (* use virtual memory function as an example, only makes sense on ARM: *)
+  theories [condition = "L4V_ARCH_IS_ARM"]
+    CorresK_Test
+
+session SepTactics (lib) in Hoare_Sep_Tactics = Sep_Algebra +
+  theories
+    Hoare_Sep_Tactics
+
+session Concurrency (lib) in concurrency = Word_Lib +
+  sessions
+    Lib
+  directories
+    "examples"
+  theories
+    Atomicity_Lib
+    Triv_Refinement
+    Prefix_Refinement
+    "examples/Peterson_Atomicity"
+    "examples/Plus2_Prefix"

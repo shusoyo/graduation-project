@@ -1,0 +1,21 @@
+(*
+ * Copyright 2020, Data61, CSIRO (ABN 41 687 119 230)
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ *)
+
+session "AutoCorresQuickstart" = "AutoCorres" +
+  options [document = pdf, document_output = "output", show_question_marks = false]
+  theories
+    Chapter1_MinMax
+    Chapter2_HoareHeap
+    Chapter3_HoareHeap
+  document_files
+    "root.tex"
+    "root.bib"
+    "comment.sty"
+    "ulem.sty"
+  document_files (in "./")
+    "minmax.c"
+    "mult_by_add.c"
+    "swap.c"

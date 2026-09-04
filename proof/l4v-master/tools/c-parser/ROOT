@@ -1,0 +1,25 @@
+(*
+ * Copyright 2020, Data61, CSIRO (ABN 41 687 119 230)
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ *)
+
+chapter "C-Parser"
+
+session "Simpl-VCG" in Simpl = Word_Lib +
+  sessions
+    "HOL-Statespace"
+  theories
+    "Vcg"
+
+session CParser = "Simpl-VCG" +
+  sessions
+    "HOL-Library"
+    "ML_Utils"
+    "Basics"
+  directories
+    "umm_heap"
+    "umm_heap/$L4V_ARCH"
+  theories
+    "CTranslation"
+    "LemmaBucket_C"

@@ -1,0 +1,53 @@
+(*
+ * Copyright 2020, Data61, CSIRO (ABN 41 687 119 230)
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ *)
+
+(*
+ * Verification challenge by Norihisa Suzuki, posed in
+ * "Automatic verification of programs with complex data structures", 1976.
+ *)
+
+theory Suzuki
+imports
+  "AutoCorres.AutoCorres"
+begin
+
+external_file "suzuki.c"
+install_C_file "suzuki.c"
+autocorres [heap_abs_syntax] "suzuki.c"
+
+context suzuki begin
+
+thm suzuki_body_def
+lemma
+  "\<Gamma> \<turnstile>
+     \<lbrace>distinct [\<acute>w, \<acute>x, \<acute>y, \<acute>z] \<and> (\<forall>p \<in> {\<acute>w, \<acute>x, \<acute>y, \<acute>z}. c_guard p)\<rbrace>
+       Call suzuki_'proc
+     \<lbrace>\<acute>ret__int = 4 \<comment> \<open>Return value\<close>\<rbrace>"
+  apply vcg
+  oops
+
+thm suzuki'_def
+(* AutoCorres's heap abstraction makes the memory model much simpler. *)
+lemma
+  "\<lbrace>\<lambda>s. s = s0 \<and> distinct [w, x, y, z] \<and> (\<forall>p \<in> {w, x, y, z}. is_valid_node_C s p)\<rbrace>
+     suzuki' w x y z
+   \<lbrace>\<lambda>rv s. rv = 4 \<and> \<comment> \<open>Return value\<close>
+           (\<exists>w' x' y' z'. s = s0[w := w'][x := x'][y := y'][z := z']) \<comment> \<open>Frame\<close>\<rbrace>!"
+  apply (unfold suzuki'_def)
+  apply wp
+  (* Return value *)
+  apply (clarsimp simp: fun_upd_apply)
+
+  (* Frame rule *)
+  (* FIXME: heap_abs_simps is still incomplete; need to unfold heap wrappers instead *)
+  apply (clarsimp simp: suzuki.update_node_def suzuki.update_node_next_def suzuki.update_node_data_def
+                        o_def fun_upd_apply)
+  apply (blast intro: lifted_globals.fold_congs)
+  done
+
+end
+
+end

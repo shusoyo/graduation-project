@@ -1,0 +1,28 @@
+(*
+ * Copyright 2020, Data61, CSIRO (ABN 41 687 119 230)
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ *)
+
+(*
+ * AutoCorres.
+ *)
+
+session AutoCorres = CParser +
+  sessions
+    "HOL-Eisbach"
+    Monads
+  theories
+    "DataStructures"
+    "AutoCorres"
+
+session AutoCorresSEL4 in "test-seL4" = CBaseRefine +
+  sessions
+    "HOL-Library"
+    "HOL-Computational_Algebra"
+    Lib
+    CLib
+    CParser
+    AutoCorres
+  theories
+    "TestSEL4"

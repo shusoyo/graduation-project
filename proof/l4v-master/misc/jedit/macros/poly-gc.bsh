@@ -1,0 +1,13 @@
+/*
+ * Copyright 2020, Data61, CSIRO (ABN 41 687 119 230)
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+/* Insert proof text to force a PolyML garbage collection. This is useful when
+ * a `try` or `sledgehammer` invocation has forced your machine into swap and
+ * has refused to return memory even after it has stopped running. Recommended
+ * usage is to bind this to a keyboard shortcut.
+ */
+
+textArea.setSelectedText("ML {* PolyML.fullGC () *}");

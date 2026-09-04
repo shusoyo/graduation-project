@@ -1,0 +1,30 @@
+Core Developers
+---------------
+
+    David Greenaway (inactive)
+
+    Japheth Lim (inactive)
+
+    Gerwin Klein (maintenance)
+
+Contributions
+-------------
+
+    Lars Noschinski
+
+        "owhile" definitions and related rules, as well as many other
+        contributions to the proof libraries.
+
+    Matthew Brecknell (inactive)
+
+        Maintenance; integration with seL4's C refinement framework.
+
+    Matthew Fernandez (inactive)
+
+        Proofs for a memcpy implementation.
+        See autocorres/tests/examples/Memcpy.thy.
+
+    Rohan Jacob-Rao (inactive)
+
+        Proof for a quicksort implementation.
+        See autocorres/tests/examples/Quicksort.thy.

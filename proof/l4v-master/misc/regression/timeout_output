@@ -1,0 +1,24 @@
+#!/bin/bash
+#
+# Copyright 2020, Data61, CSIRO (ABN 41 687 119 230)
+#
+# SPDX-License-Identifier: BSD-2-Clause
+#
+
+L4VBASE=$(dirname "$0")/../..
+OUTDIR=$($L4VBASE/isabelle/bin/isabelle env bash -c 'echo "$ISABELLE_OUTPUT"')
+FILE="$OUTDIR/log/$1_times.txt"
+
+if [[ -e $FILE ]]
+then
+  echo Long running tasks for "$1":
+  grep '^Long' $FILE | tail -n 10
+  echo
+  echo final timing log:
+  tail -n 10 $FILE
+  echo
+  echo "  (more information might be found in $FILE)"
+else
+  echo No timing log for "$1" was found.
+  echo "  (in $FILE)"
+fi

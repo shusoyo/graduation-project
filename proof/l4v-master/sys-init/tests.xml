@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!--
+     Copyright 2020, Data61, CSIRO (ABN 41 687 119 230)
+
+     SPDX-License-Identifier: GPL-2.0-only
+-->
+
+<!--
+
+     Regression Specification File
+
+     See "misc/regression/tests.xml" for a description of the file
+     format.
+
+-->
+<testsuite cpu-timeout="3600" depends="isabelle Lib">
+    <!-- SysInit specs. Depends on one file in session DSpecProofs, but not
+         on the image DSpecProofs. -->
+    <sequence depends="SepDSpec">
+        <test name="SysInitSpec">make SysInitSpec</test>
+    </sequence>
+    <!-- SysInit proofs -->
+    <sequence depends="DSpecProofs">
+        <test name="SysInit">make SysInit</test>
+        <test name="SysInitExamples">make SysInitExamples</test>
+    </sequence>
+</testsuite>

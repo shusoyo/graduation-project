@@ -1,0 +1,28 @@
+<!--
+     Copyright 2020, Data61, CSIRO (ABN 41 687 119 230)
+
+     SPDX-License-Identifier: BSD-2-Clause
+-->
+
+Isabelle Benchmarking Framework
+===============================
+
+This directory contains a framework and some sample tests for benchmarking the
+performance of Isabelle at the ML level.
+
+The benchmarks can be run by using the included script:
+
+    ./benchmark.py BenchBasics.thy
+
+If errors are detected, details can be discovered by passing in the verbose
+"-v" flag:
+
+    ./benchmark.py -v BenchBasics.thy
+
+The python module "pexpect" is required, and is available in all leading
+distribution packaging systems.
+
+Parameters at the top of "benchmark.ML" allow you to control how accurate
+the benchmarks are (number of repetitions, length of each benchmark) if
+accurate numbers are required.
+

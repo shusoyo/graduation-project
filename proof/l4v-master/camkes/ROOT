@@ -1,0 +1,103 @@
+(*
+ * Copyright 2020, Data61, CSIRO (ABN 41 687 119 230)
+ *
+ * SPDX-License-Identifier: GPL-2.0-only
+ *)
+
+(*
+ * CAMKES
+ *)
+
+chapter CAmkES
+
+session CamkesAdlSpec (Camkes) in "adl-spec" = Access +
+  options [document = pdf]
+  theories
+    "Wellformed_CAMKES"
+    "Examples_CAMKES"
+  document_files
+    "imgs/compilation.pdf"
+    "imgs/composite-passthrough.pdf"
+    "imgs/dataport.pdf"
+    "imgs/echo.pdf"
+    "imgs/event.pdf"
+    "imgs/terminal.pdf"
+    "intro.tex"
+    "root.tex"
+    "comment.sty"
+    "ulem.sty"
+
+(* Base session for CAmkES<->CapDL reasoning. This session is intended to be simply a combination
+ * of CamkesAdlSpec and DSpec, and is defined because we can't easily depend on both.
+ *)
+session CamkesCdlBase (Camkes) = DPolicy +
+  sessions
+    DSpec
+    CamkesAdlSpec
+    Lib
+  theories
+    "DSpec.Syscall_D"
+    "CamkesAdlSpec.Wellformed_CAMKES"
+    "CamkesAdlSpec.Examples_CAMKES"
+    "Lib.LemmaBucket"
+
+(* CAmkES<->CapDL reasoning. *)
+session CamkesCdlRefine (Camkes) in "cdl-refine" = CamkesCdlBase +
+  theories
+    Policy_CAMKES_CDL
+    Eval_CAMKES_CDL
+
+session CamkesGlueSpec (Camkes) in "glue-spec" = HOL +
+  options [document = pdf]
+  directories
+    "example-procedure"
+    "example-event"
+    "example-dataport"
+    "example-untrusted"
+    "example-trusted"
+  theories
+    Abbreviations
+    CIMP
+    Connector
+    Types
+    UserStubs
+    "example-procedure/GenSimpleSystem"
+    "example-event/GenEventSystem"
+    "example-dataport/GenDataportSystem"
+    "example-untrusted/EgTop"
+    "example-trusted/EgTop2"
+  document_files
+    "dataport.camkes"
+    "event.camkes"
+    "imgs/echo.pdf"
+    "imgs/filter.pdf"
+    "imgs/thydeps.pdf"
+    "intro.tex"
+    "root.bib"
+    "root.tex"
+    "filter.camkes"
+    "simple.camkes"
+    "comment.sty"
+    "ulem.sty"
+
+session CamkesGlueProofs (Camkes) in "glue-proofs" = AutoCorres +
+  options [document = pdf, quick_and_dirty]
+  theories
+    Syntax
+    RPCFrom
+    RPCTo
+    EventFrom
+    EventTo
+    DataIn
+  document_files
+    "eventfrom-emit-underlying.c"
+    "eventto-poll.c"
+    "eventto-wait.c"
+    "from-echo-int.c"
+    "intro.tex"
+    "root.bib"
+    "root.tex"
+    "simple.camkes"
+    "to-echo-int.c"
+    "comment.sty"
+    "ulem.sty"

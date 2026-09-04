@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!--
+     Copyright 2020, Data61, CSIRO (ABN 41 687 119 230)
+
+     SPDX-License-Identifier: GPL-2.0-only
+-->
+
+<!--
+
+     Regression Specification File
+
+     See "misc/regression/tests.xml" for a description of the file
+     format.
+
+-->
+<testsuite depends="isabelle Lib" cpu-timeout="3600">
+    <test name="CamkesAdlSpec" depends="Access">make CamkesAdlSpec</test>
+    <test name="CamkesCdlRefine" depends="CamkesAdlSpec DPolicy">make CamkesCdlRefine</test>
+    <test name="CamkesGlueSpec">make CamkesGlueSpec</test>
+    <test name="CamkesGlueProofs" depends="AutoCorres" cpu-timeout="7200">make CamkesGlueProofs</test>
+</testsuite>

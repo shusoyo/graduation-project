@@ -1,0 +1,151 @@
+#!/usr/bin/env python3
+#
+# Copyright 2020, Data61, CSIRO (ABN 41 687 119 230)
+#
+# SPDX-License-Identifier: BSD-2-Clause
+#
+
+import os
+import sys
+import argparse
+import subprocess
+
+# Settings
+L4V_ARCH_DEFAULT="ARM"
+L4V_ARCH_LIST=["ARM","ARM_HYP","X64","RISCV64", "AARCH64"]
+
+# Fetch directory this script is stored in.
+DIR=os.path.dirname(os.path.realpath(__file__))
+
+# Add repo version of Isabelle to our path.
+os.environ["PATH"] += os.pathsep + DIR
+
+# Enable tracking stuck tasks, and set report interval to 3 seconds
+os.environ["ISABELLE_TIMING_LOG"]="3.0s"
+
+# Enable quick_and_dirty mode for various images
+if "QUICK_AND_DIRTY" in os.environ:
+    os.environ["AINVS_QUICK_AND_DIRTY"]="1"
+    os.environ["REFINE_QUICK_AND_DIRTY"]="1"
+    os.environ["CREFINE_QUICK_AND_DIRTY"]="1"
+    print("Testing with QUICK_AND_DIRTY")
+
+# Lists of excluded tests for different archs
+EXCLUDE={}
+
+EXCLUDE["ARM_HYP"]=[
+    "Access",
+    "Bisim",
+    "DRefine",
+    "RefineOrphanage",
+    "SimplExportAndRefine"]
+
+EXCLUDE["ARM"]=[]
+
+EXCLUDE["X64"]=[
+    "Access",
+    "AutoCorresSEL4",
+    "CamkesGlueProofs",
+    "DBaseRefine",
+    "DSpec",
+    "RefineOrphanage",
+    "SimplExportAndRefine",
+    "AsmRefine"
+]
+
+EXCLUDE["RISCV64"]=[
+    "AutoCorresSEL4",
+    "DSpec",
+    "DBaseRefine",
+    "CamkesGlueProofs",
+    "AsmRefine"
+]
+
+EXCLUDE["AARCH64"]=[
+    # To be eliminated/refined as development progresses
+    "ASepSpec",
+    "InfoFlow",
+
+    # Tools and unrelated content, removed for development
+    "AutoCorres",
+    "CamkesGlueSpec",
+    "Concurrency",
+    "EVTutorial",
+    "TakeGrant",
+    "Bisim",
+
+    # Longer-term exclusions
+    "AutoCorresSEL4",
+    "DBaseRefine",
+    "DSpecProofs",
+    "SysInit",
+    "CamkesGlueProofs",
+    "AsmRefine",
+    "SimplExportAndRefine"
+]
+
+# Check EXCLUDE is exhaustive over the available architectures
+if not set(L4V_ARCH_LIST) <= set(EXCLUDE.keys()):
+    sys.exit("[INTERNAL ERROR] exclusion lists are non-exhaustive")
+
+parser = argparse.ArgumentParser(add_help=False)
+parser.add_argument('--l4v-arch', metavar='ARCH,...', type=str,
+                    help='test multiple L4V_ARCHs (comma-separated)')
+parser.add_argument('--l4v-arches', metavar='ARCH,...', type=str,
+                    help='legacy alias for --l4v-arch')
+parser.add_argument('--l4v-arch-all', dest='l4v_arches',
+                    action='store_const', const=','.join(L4V_ARCH_LIST),
+                    help='test all L4V_ARCHes')
+parser.add_argument('-h', '--help', action='store_true',
+                    help=argparse.SUPPRESS)
+
+args, passthrough_args = parser.parse_known_args()
+
+if args.l4v_arch or args.l4v_arches:
+    archs = args.l4v_arch.split(',') if args.l4v_arch else []
+    archs += args.l4v_arches.split(',') if args.l4v_arches else []
+    # remove duplicates in case both are used
+    archs = list(dict.fromkeys(archs))
+elif "L4V_ARCH" in os.environ:
+    archs = [os.environ["L4V_ARCH"]]
+else:
+    archs = [L4V_ARCH_DEFAULT]
+
+for arch in archs:
+    if arch not in L4V_ARCH_LIST:
+        sys.exit("Unknown architecture: %s" % arch)
+
+if args.help:
+    parser.print_help()
+    print('Now printing help for main regression script:')
+    print('--------')
+    passthrough_args += ['--help']
+    archs = archs[:1]
+
+returncode = 0
+for arch in archs:
+    features = os.environ.get("L4V_FEATURES", "")
+    plat = os.environ.get("L4V_PLAT", "")
+    num_domains = os.environ.get("INPUT_NUM_DOMAINS", "")
+    print(f"Testing for L4V_ARCH='{arch}', L4V_FEATURES='{features}', L4V_PLAT='{plat}', "
+          f"INPUT_NUM_DOMAINS='{num_domains}'")
+
+    os.environ["L4V_ARCH"] = arch
+    # Provide L4V_ARCH_IS_ARM for Corres_Test in lib/ROOT
+    if arch == "ARM":
+        os.environ["L4V_ARCH_IS_ARM"] = arch
+        print("Setting L4V_ARCH_IS_ARM")
+    elif "L4V_ARCH_IS_ARM" in os.environ:
+        del os.environ["L4V_ARCH_IS_ARM"]
+
+    sys.stdout.flush()
+
+    # Arguments:
+    args  = ['./misc/regression/run_tests.py']            # Script name
+    args += [r for t in EXCLUDE[arch] for r in ['-r', t]] # Exclusion list
+    args += passthrough_args                              # Other arguments
+
+    # Run the tests from the script directory.
+    # Also collect the last non-zero return code.
+    returncode = subprocess.call(args, cwd=DIR) or returncode
+sys.exit(returncode)

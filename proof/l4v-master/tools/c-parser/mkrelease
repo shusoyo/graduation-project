@@ -1,0 +1,197 @@
+#!/usr/bin/env bash
+#
+# Copyright 2020, Data61, CSIRO (ABN 41 687 119 230)
+#
+# SPDX-License-Identifier: BSD-2-Clause
+#
+
+#
+# Generate a standalone tarball of the C parser.
+#
+
+set -e
+
+case $(uname) in
+  Darwin* ) TAR=gtar ;;
+  * ) TAR=tar ;;
+esac
+
+
+warn ()
+{
+  echo "$1" >&2
+}
+
+die ()
+{
+  echo "$1" >&2
+  echo "Fatal error"
+  exit 1
+}
+
+if [ $# -ne 1 ]
+then
+    echo "Usage:" >&2
+    echo "  $0 <c-parser-tag-version>"
+    die "e.g.  $0 1.20" >&2
+fi
+
+# Get the directory that this script is running in.
+CPARSER_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+TOPLEVEL_DIR=$( git -C ${CPARSER_DIR} rev-parse --show-toplevel)
+RELEASE_ARCHS='ARM ARM_HYP AARCH64 X64 RISCV64'
+pushd "${TOPLEVEL_DIR}"
+
+# Ensure that our working directory is clean.
+if git status --porcelain | grep -q -v '^??' ; then
+    if [[ -v ALLOW_DIRTY ]]; then
+        warn "WARNING: Dirty working tree."
+    else
+        warn "ERROR: Dirty working tree. Set the environment vairable ALLOW_DIRTY to ignore."
+        exit 1
+    fi
+fi
+
+# Create working directories.
+tmpdir=$(mktemp -d)
+outputdir=$tmpdir/c-parser
+echo "Outputs being placed in \"${outputdir}\"."
+
+# Parse command line arguments.
+tag=$1
+stem=c-parser-$tag
+shift
+
+[ -a "$stem" ] && die "Directory $stem already exists."
+
+safemakedir ()
+{
+    if [ ! -d "$1" ]
+    then
+        warn "Creating $1"
+        mkdir -p "$1"
+    else
+        warn "WARNING: release will be merged with existing $1 directory"
+    fi
+}
+safemakedir "$outputdir/src/lib"
+safemakedir "$outputdir/src/c-parser"
+safemakedir "$outputdir/doc"
+
+
+echo "Tarring standard sources"
+# Some testfiles have non-ASCII filenames, so we need git ls-files -z. Ugh.
+git -C "${TOPLEVEL_DIR}" ls-files -z | tr '\0' '\n' |
+    grep ^tools/c-parser |
+    grep -v tools/c-parser/notes |
+    grep -v tools/c-parser/mkrelease |
+   tar -v -T - -c -f - -l |
+  (cd "$outputdir/src" ; tar xf -)
+
+echo "Getting theory dependencies"
+CPARSER_DEPS=$(mktemp)
+for ARCH in $RELEASE_ARCHS; do
+    L4V_ARCH=$ARCH misc/scripts/thydeps -I ./isabelle -d . -b . -r CParser
+done |
+    sort -u >"$CPARSER_DEPS"
+
+if grep -q -vE '^(lib/|tools/c-parser/)' "$CPARSER_DEPS"; then
+    echo >&2 'unexpected dependencies outside lib/ and tools/c-parser/:'
+    grep >&2 -vE '^(lib/|tools/c-parser/)' "$CPARSER_DEPS"
+    exit 1
+fi
+
+echo "Copying lib files"
+for f in $(grep '^lib/' "$CPARSER_DEPS")
+do
+    mkdir -p "$(dirname "$outputdir/src/$f")"
+    cp -v $f "$outputdir/src/$f"
+done
+
+# other misc files
+cp -v lib/Word_Lib/ROOT "$outputdir/src/lib/Word_Lib/"
+cp -v lib/Basics/ROOT "$outputdir/src/lib/Basics/"
+cp -v lib/ML_Utils/ROOT "$outputdir/src/lib/ML_Utils/"
+
+echo "Creating ROOTS file"
+cat >"$outputdir/src/ROOTS" <<EOF
+lib/Word_Lib
+lib/Basics
+lib/ML_Utils
+c-parser
+EOF
+
+echo "Rearranging directories"
+/bin/mv -v "$outputdir/src/tools/c-parser/README.md" "$outputdir"
+/bin/mv -v "$outputdir/src/tools/c-parser" "$outputdir/src/"
+rmdir "$outputdir/src/tools"
+
+echo "Removing files"
+/bin/rm -v "$outputdir/src/c-parser/testfiles/many_local_vars".{c,thy}
+
+echo "Executing gen_isabelle_root to generate testfiles/\$L4V_ARCH/ROOT."
+for L4V_ARCH in $RELEASE_ARCHS; do
+    python3 misc/scripts/gen_isabelle_root.py -i "$outputdir/src/c-parser/testfiles" -i "$outputdir/src/c-parser/testfiles/${L4V_ARCH}" -o "$outputdir/src/c-parser/testfiles/$L4V_ARCH/ROOT" -s CParserTest -b CParser --dir ".." --dir "imports" ||
+        die "gen_isabelle_root failed."
+done
+
+echo "Executing gen_isabelle_root to generate testfiles/all_tests_\$L4V_ARCH.thy."
+for L4V_ARCH in $RELEASE_ARCHS; do
+    python3 misc/scripts/gen_isabelle_root.py -T -o "$outputdir/src/c-parser/all_tests_${L4V_ARCH}.thy" -b CParser -i "$outputdir/src/c-parser/testfiles" -i "$outputdir/src/c-parser/testfiles/${L4V_ARCH}" ||
+        die "gen_isabelle_root failed."
+done
+
+echo "Hacking Makefile to remove ROOT generation."
+if ! grep -q '^testfiles/\$(L4V_ARCH)/ROOT' "$outputdir/src/c-parser/Makefile"; then
+    die "failed to process c-parser/Makefile"
+fi
+sed -i .bak \
+    -e '/^testfiles\/\$(L4V_ARCH)\/ROOT/,/CParserTest/d' \
+    -e '/^all_tests_\$(L4V_ARCH)\.thy/,/CParser/d' \
+    "$outputdir/src/c-parser/Makefile"
+rm -f "$outputdir/src/c-parser/Makefile.bak"
+
+echo "Hacking Makefile to change root dir."
+if ! grep -q '^L4V_ROOT_DIR = ' "$outputdir/src/c-parser/Makefile"; then
+    die "failed to process c-parser/Makefile"
+fi
+sed -i .bak \
+    -e 's/^L4V_ROOT_DIR = .*$/L4V_ROOT_DIR = ../' \
+    "$outputdir/src/c-parser/Makefile"
+rm -f "$outputdir/src/c-parser/Makefile.bak"
+
+echo "Generating standalone-parser/table.ML"
+pushd "$TOPLEVEL_DIR/tools/c-parser" > /dev/null
+"$TOPLEVEL_DIR/isabelle/bin/isabelle" env make -f Makefile "$(pwd)/standalone-parser/table.ML" \
+    || die "Couldn't generate table.ML for standalone parser"
+cp standalone-parser/table.ML "$outputdir/src/c-parser/standalone-parser"
+echo "Cleaning up standalone-parser's Makefile"
+sed '
+  /^STP_PFX :=/i\
+SML_COMPILER ?= mlton
+  /^include/d
+  /General\/table.ML/,/removed apply_unsynchronized_cache/d
+  /ISABELLE_HOME/d
+  /CLEAN_TARGETS/s|\$(STP_PFX)/table.ML||
+' < standalone-parser/Makefile > "$outputdir/src/c-parser/standalone-parser/Makefile"
+popd > /dev/null
+
+echo "Making PDF of ctranslation file."
+cd "$outputdir/src/c-parser/doc"
+make ctranslation.pdf > /dev/null
+/bin/rm -f ctranslation.{log,aux,blg,bbl,toc}
+mv ctranslation.pdf "$outputdir/doc"
+
+popd > /dev/null
+
+echo -n "Compressing into $stem.tar.gz: "
+mv "$tmpdir/c-parser" "$tmpdir/$stem"
+
+pushd "$tmpdir"
+"$TAR" --owner=nobody --group=nogroup -cvzf "${stem}.tar.gz" "$stem" |
+    while read ; do echo -n "." ; done
+popd
+/bin/mv -f -v "$tmpdir/${stem}.tar.gz" .
+
+echo
+echo Done.

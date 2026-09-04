@@ -1,0 +1,29 @@
+(*
+ * Copyright 2020, Data61, CSIRO (ABN 41 687 119 230)
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ *)
+
+chapter "Tools"
+
+session AsmRefine = CParser +
+  sessions
+    Word_Lib
+    Lib
+    CLib
+  directories
+    "$L4V_ARCH"
+  theories
+    GraphProof
+    ProveGraphRefine
+    GhostAssertions
+    SimplExport
+
+session AsmRefineTest in "testfiles" = AsmRefine +
+  options [threads = 1] (* use of unsync references in test files *)
+  sessions
+    CParser
+  theories
+    "global_asm_stmt_gref"
+    "inf_loop_gref"
+    "global_array_swap_gref"

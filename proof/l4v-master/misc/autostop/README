@@ -1,0 +1,33 @@
+<!--
+     Copyright 2020, Data61, CSIRO (ABN 41 687 119 230)
+
+     SPDX-License-Identifier: BSD-2-Clause
+-->
+
+Running 64-bit Isabelle is a dangerous task. In particular, it is liable to
+suck up all your RAM and send your system into swap-death on quite a regular
+basis.
+
+This Linux utility will regularly scan the system for signs of swap-death
+(i.e., low memory and high pagefault rate and high load average) and send
+SIGSTOP to processes suspected of being the cause.
+
+Compile, and setup the script to run in root's home directory as follows:
+
+    gcc -O2 stop.c -o stop
+    sudo mv stop /root
+
+Then add the following line to root's crontab:
+
+    @reboot /root/stop
+
+When it triggers, it will write to syslog stating the process stopped.
+
+Known problems:
+
+    * Chrome is memory hungry, so it will often stop your chrome processes
+      prior to Isabelle.
+
+    * Compiz is memory hungry, so it will sometimes stop your compiz process
+      before Isabelle.
+
